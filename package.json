@@ -1,0 +1,22 @@
+{
+  "name": "ba-api",
+  "version": "0.1.0",
+  "description": "API for react apps to get posts from the BabyApps site.",
+  "main": "posts.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/neil-cutcliffe/babyapp-node_modules.git"
+  },
+  "author": "Neil Cutcliffe",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/neil-cutcliffe/babyapp-node_modules/issues"
+  },
+  "homepage": "https://github.com/neil-cutcliffe/babyapp-node_modules#readme",
+  "dependencies": {
+    "wpapi": "^1.2.2"
+  }
+}
