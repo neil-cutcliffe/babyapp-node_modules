@@ -1,65 +1,21 @@
 import { Component } from "react";
 import WPAPI from "wpapi";
 
-export var baseName     = '';
-export var appName      = '';
-       var wordpressUrl = '';
-
-const isLocalhost = Boolean(
-  window.location.hostname === 'localhost' ||
-    // [::1] is the IPv6 localhost address.
-    window.location.hostname === '[::1]' ||
-    // 127.0.0.0/8 are considered localhost for IPv4.
-    window.location.hostname.match(/^127(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$/)
-);
-
-if (isLocalhost) {
-
-  // Use wordpress server on a site setup for testing.
-
-  baseName     = '/'
-  appName      = import.meta.env.VITE_WORDPRESS_SITE
-  wordpressUrl = import.meta.env.VITE_WORDPRESS_HOST + '/' + appName
-
-//  this is old, before switching from React to Vite
-//  appName      = process.env.REACT_APP_WORDPRESS_SITE
-//  wordpressUrl = process.env.REACT_APP_WORDPRESS_HOST + '/' + appName
-
-} else {
-
-  // Use wordpress server that served this app
-
-  // Last two components of pathname are baseName for the Router
-  const pos1   = window.location.href.lastIndexOf('/',
-                 window.location.href.lastIndexOf('/',
-                 window.location.href.lastIndexOf('/')-1)-1)
-  const pos2   = window.location.href.lastIndexOf('/')
-  baseName     = window.location.href.substr( pos1, pos2 - pos1 + 1 )
-
-  // First component of baseName is appName
-  appName      = baseName.substr(1,
-                 baseName.lastIndexOf('/',
-                 baseName.lastIndexOf('/')-1)-1)
-
-  wordpressUrl = window.location.href.substr(0,
-                 window.location.href.lastIndexOf('/',
-                 window.location.href.lastIndexOf('/')-1))
-}
-
-console.log('baseName: '     + baseName)
-console.log('appName: '      + appName)
-console.log('wordpressUrl: ' + wordpressUrl)
-
-
-const wp_no_auth = new WPAPI({ endpoint: wordpressUrl + '/wp-json' })
-let   wp = wp_no_auth
 
 class WPFetch extends Component {
+
+constructor(wordpressUrl) {
+  super();
+  this.wordpressEndpoint = wordpressUrl + '/wp-json';
+  this.wp_no_auth = new WPAPI({ endpoint: this.wordpressEndpoint });
+  this.wp = this.wp_no_auth
+}
+
 
 deleteFromCache = async ( cacheName, path ) => {
   console.log('WPFetch.deleteFromCache url=', path)
   const cache = await caches.open(cacheName);
-  await cache.delete(wordpressUrl + path);
+  await cache.delete(this.wordpressEndpoint + path);
 }
 
 
@@ -67,7 +23,7 @@ CheckAuth = async ( email, password ) => {
   var ret = false
 
   var wp_auth = new WPAPI({
-    endpoint: wordpressUrl + '/wp-json',
+    endpoint: this.wordpressEndpoint,
     username: email,
     password: password,
     auth: true
@@ -88,7 +44,7 @@ CheckAuth = async ( email, password ) => {
   .then(function( data ) {
       console.log('WPFetch.CheckAuth .then')
       console.log(data)
-      wp = wp_auth
+      this.wp = wp_auth
       ret = true
   })
 // Let the caller catch errors
@@ -96,7 +52,7 @@ CheckAuth = async ( email, password ) => {
 }
 
 CancelAuth = ( ) => {
-  wp = wp_no_auth
+  this.wp = this.wp_no_auth
 }
 
 
@@ -108,7 +64,7 @@ Update = async ( id, t, c, f ) => {
                 + ' content:' + c
                 + ' file:'    + f )
 
-  await wp.posts().id( id ).update({
+  await this.wp.posts().id( id ).update({
     'title':   t,
     'content': c
   })
@@ -126,7 +82,7 @@ UpdateMeta = async ( id, favorite ) => {
                 + ' id:' + id
                 + ' favorite:'+ favorite )
 
-  await wp.posts().id( id ).update({
+  await this.wp.posts().id( id ).update({
     'meta':   {'_favorite': favorite}
   })
   .then( function( data ) {
@@ -142,7 +98,7 @@ Delete = async ( id ) => {
   console.log('WPFetch.Delete'
                 + ' id:' + id )
 
-  await wp.posts().id( id ).delete()
+  await this.wp.posts().id( id ).delete()
   .then( function( data ) {
     console.log(data)
     ret = data
@@ -158,7 +114,7 @@ Delete = async ( id ) => {
 Create = async ( t, c, f ) => {
   var ret
   console.log('WPFetch.Create title:' + t + ' content:' + c + ' file:' + f)
-  await wp.posts().create({
+  await this.wp.posts().create({
       title: t,
       content: c,
       status: 'publish'
@@ -167,13 +123,13 @@ Create = async ( t, c, f ) => {
     console.log('WPFetch.Create file post.id:' + post.id )
     ret = post
     if ( f ) {
-      await wp.media().file( f ).create({
+      await this.wp.media().file( f ).create({
         title: f.name,
         post: post.id
       })
       .then( async function( media ) {
         console.log('WPFetch.Create media.id:' + media.id + ' post.id:' + post.id )
-        await wp.posts().id( post.id ).update({
+        await this.wp.posts().id( post.id ).update({
           featured_media: media.id
         })
         .then( function( data ) {
@@ -202,7 +158,7 @@ Create = async ( t, c, f ) => {
 
 Posts = async () => {
   var ret
-  await wp.posts().get()
+  await this.wp.posts().get()
   .then(function( data ) {
       ret = data
   })
@@ -216,7 +172,7 @@ Posts = async () => {
 
 Post = async (id) => {
   var ret
-  await wp.posts().id(id).get()
+  await this.wp.posts().id(id).get()
   .then(function( data ) {
       ret = data
   })
@@ -230,7 +186,7 @@ Post = async (id) => {
 
 Author = async(id) => {
   var ret
-  await wp.users().id(id).get()
+  await this.wp.users().id(id).get()
   .then(function( data ) {
       ret = data
   })
@@ -244,7 +200,7 @@ Author = async(id) => {
 
 Media = async (id) => {
   var ret
-  await wp.media().id(id).get()
+  await this.wp.media().id(id).get()
   .then(function( data ) {
       ret = data
   })

@@ -2,7 +2,56 @@ import WPFetch from "./WPFetch";
 //import { matchSorter } from "match-sorter";
 //import sortBy from "sort-by";
 
-var wpFetch = new WPFetch()
+export var baseName     = '';
+export var appName      = '';
+       var wordpressUrl = '';
+
+const isLocalhost = Boolean(
+  window.location.hostname === 'localhost' ||
+    // [::1] is the IPv6 localhost address.
+    window.location.hostname === '[::1]' ||
+    // 127.0.0.0/8 are considered localhost for IPv4.
+    window.location.hostname.match(/^127(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$/)
+);
+
+if (isLocalhost) {
+
+  // Use wordpress server on a site setup for testing.
+
+  baseName     = '/'
+  appName      = import.meta.env.VITE_WORDPRESS_SITE
+  wordpressUrl = import.meta.env.VITE_WORDPRESS_HOST + '/' + appName
+
+//  this is old, before switching from React to Vite
+//  appName      = process.env.REACT_APP_WORDPRESS_SITE
+//  wordpressUrl = process.env.REACT_APP_WORDPRESS_HOST + '/' + appName
+
+} else {
+
+  // Use wordpress server that served this app
+
+  // Last two components of pathname are baseName for the Router
+  const pos1   = window.location.href.lastIndexOf('/',
+                 window.location.href.lastIndexOf('/',
+                 window.location.href.lastIndexOf('/')-1)-1)
+  const pos2   = window.location.href.lastIndexOf('/')
+  baseName     = window.location.href.substr( pos1, pos2 - pos1 + 1 )
+
+  // First component of baseName is appName
+  appName      = baseName.substr(1,
+                 baseName.lastIndexOf('/',
+                 baseName.lastIndexOf('/')-1)-1)
+
+  wordpressUrl = window.location.href.substr(0,
+                 window.location.href.lastIndexOf('/',
+                 window.location.href.lastIndexOf('/')-1))
+}
+
+console.log('baseName: '     + baseName)
+console.log('appName: '      + appName)
+console.log('wordpressUrl: ' + wordpressUrl)
+
+var wpFetch = new WPFetch(wordpressUrl)
 
 export async function getPosts(query) {
   console.log('getPosts()');
@@ -77,5 +126,6 @@ export async function getAuthor(id) {
 export async function getMedia(id) {
   console.log('getMedia() id=' + id)
   const media = await wpFetch.Media(id);
+  console.log(media);
   return media ?? null;
 }
