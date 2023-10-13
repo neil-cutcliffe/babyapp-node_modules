@@ -56,7 +56,7 @@ var wpFetch = new WPFetch(wordpressUrl)
 export async function getPosts(query) {
   console.log('getPosts()');
   let posts = await wpFetch.Posts();
-  if (!posts) posts = [];
+//  if (!posts) posts = [];
   console.log(posts);
 //  console.log(query);
 //  if (query) {
